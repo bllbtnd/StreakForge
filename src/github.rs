@@ -90,19 +90,33 @@ pub fn compute_streak(days: &[ContributionDay], tz: Tz) -> StreakResult {
 }
 
 fn compute_current(days: &[(NaiveDate, i64)], today: NaiveDate) -> i64 {
+    let today_count = days.iter()
+        .find(|(d, _)| *d == today)
+        .map(|(_, c)| *c)
+        .unwrap_or(0);
+
+    let mut expected = if today_count > 0 {
+        today
+    } else {
+        match today.pred_opt() {
+            Some(d) => d,
+            None => return 0,
+        }
+    };
+
     let mut streak = 0i64;
-    let mut expected = today;
 
     for (date, count) in days.iter().rev() {
         if *date > today {
             continue;
         }
-        if *date == expected && *count > 0 {
-            streak += 1;
-            expected = expected.pred_opt().unwrap_or(expected);
-        } else if *date == expected && *count == 0 {
-            if *date == today {
-                expected = expected.pred_opt().unwrap_or(expected);
+        if *date == expected {
+            if *count > 0 {
+                streak += 1;
+                expected = match expected.pred_opt() {
+                    Some(d) => d,
+                    None => break,
+                };
             } else {
                 break;
             }
