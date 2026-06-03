@@ -1,16 +1,27 @@
+// fire-symbol paths (original viewBox 0 0 32 32):
+// translate(26.9,13.4) scale(4.57) maps them to x:40-160, y:18-155 in our 200x200 card
+const FIRE_PATHS: &str = "M16 1c-3.282 15.79-13.125 17.366 0 28.418 13.126-11.053 3.282-12.628 0-28.418z\
+M7.797 10.463c-1.641 4.736-4.922 7.919-4.922 12.656s6.562 7.881 11.485 7.881c-9.844-7.896-6.563-12.643-6.563-20.537z\
+M24.203 10.463c0 7.895 3.282 12.642-6.562 20.537 4.922 0 11.485-3.144 11.485-7.881s-3.282-7.92-4.922-12.656z";
+
+// center tongue only, scaled slightly smaller for the hot-core highlight
+const CORE_PATH: &str = "M16 1c-3.282 15.79-13.125 17.366 0 28.418 13.126-11.053 3.282-12.628 0-28.418z";
+
 pub fn render_card(username: &str, streak: i64, longest_streak: i64, rank: i64) -> String {
-    let (outer, inner) = flame_shades(streak);
+    let (outer_color, inner_color) = shades(streak);
     let num_color = if streak == 0 { "#484f58" } else { "#ffffff" };
-    let anim = animation_block(streak);
+    let anim = anim_css(streak);
 
     let flame = if streak > 0 {
         format!(
             r##"<g class="flame">
-    <path d="M48,155 C30,153 21,138 27,122 C31,110 43,104 56,113 C51,93 53,72 64,55 C58,42 55,26 67,18 C74,13 82,20 85,38 C88,22 94,10 100,16 C106,10 112,22 115,38 C118,20 126,13 133,18 C145,26 142,42 136,55 C147,72 149,93 144,113 C157,104 169,110 173,122 C179,138 170,153 152,155 Z" fill="{outer}"/>
-    <path d="M62,150 C50,148 44,136 50,122 C53,113 62,107 72,115 C68,97 70,78 79,62 C74,50 72,36 82,30 C87,26 93,32 95,44 C97,30 100,22 103,30 C105,22 113,26 118,30 C128,36 126,50 121,62 C130,78 132,97 128,115 C138,107 147,113 150,122 C156,136 150,148 138,150 Z" fill="{inner}"/>
+    <path transform="translate(26.9,13.4) scale(4.57)" d="{fire}" fill="{oc}"/>
+    <path transform="translate(36,26) scale(4.0)" d="{core}" fill="{ic}"/>
   </g>"##,
-            outer = outer,
-            inner = inner,
+            fire = FIRE_PATHS,
+            core = CORE_PATH,
+            oc = outer_color,
+            ic = inner_color,
         )
     } else {
         String::new()
@@ -49,24 +60,22 @@ pub fn render_error_card(message: &str) -> String {
     )
 }
 
-fn flame_shades(streak: i64) -> (&'static str, &'static str) {
+fn shades(streak: i64) -> (&'static str, &'static str) {
     match streak {
-        1..=6   => ("#cc9900", "#ffd700"),
-        7..=13  => ("#cc6600", "#ff9900"),
-        14..=29 => ("#cc4400", "#ff6600"),
-        30..=59 => ("#cc1a00", "#ff3300"),
-        60..=99 => ("#aa0000", "#ee0000"),
+        1..=6     => ("#e6a800", "#ffd700"),
+        7..=13    => ("#e67300", "#ffaa00"),
+        14..=29   => ("#cc4400", "#ff6600"),
+        30..=59   => ("#cc1a00", "#ff3300"),
+        60..=99   => ("#aa0000", "#ee1111"),
         100..=149 => ("#880044", "#cc0066"),
         150..=199 => ("#660088", "#9900cc"),
-        200..=364 => ("#440099", "#6600ff"),
-        _          => ("#002299", "#0055ff"),
+        200..=364 => ("#3300aa", "#5500ff"),
+        _         => ("#0033bb", "#0055ff"),
     }
 }
 
-fn animation_block(streak: i64) -> String {
-    if streak == 0 {
-        return String::new();
-    }
+fn anim_css(streak: i64) -> String {
+    if streak == 0 { return String::new(); }
     let speed: f32 = match streak {
         1..=6   => 2.4,
         7..=29  => 1.8,
@@ -74,13 +83,13 @@ fn animation_block(streak: i64) -> String {
         _       => 0.7,
     };
     format!(
-        r#"@keyframes flicker {{
+        r#"@keyframes f{{
     0%,100%{{transform:scaleX(1) scaleY(1) rotate(0deg);opacity:1}}
     25%{{transform:scaleX(.97) scaleY(1.03) rotate(-1.5deg);opacity:.93}}
     50%{{transform:scaleX(1.02) scaleY(.97) rotate(1deg);opacity:.88}}
     75%{{transform:scaleX(.98) scaleY(1.02) rotate(-.5deg);opacity:.95}}
   }}
-  .flame{{transform-origin:100px 155px;animation:flicker {speed}s ease-in-out infinite;}}"#
+  .flame{{transform-origin:100px 155px;animation:f {speed}s ease-in-out infinite;}}"#
     )
 }
 
