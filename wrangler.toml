@@ -2,6 +2,10 @@ name = "streakforge"
 main = "build/worker/shim.mjs"
 compatibility_date = "2026-06-01"
 
+routes = [
+  { pattern = "streakforge.ballabotond.com", custom_domain = true }
+]
+
 [build]
 command = "worker-build --release"
 
