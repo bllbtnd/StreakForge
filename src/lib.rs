@@ -116,7 +116,7 @@ async fn fetch_and_store(
 }
 
 fn svg_response(svg: String) -> Result<Response> {
-    let mut headers = Headers::new();
+    let headers = Headers::new();
     headers.set("Content-Type", "image/svg+xml")?;
     headers.set("Cache-Control", "public, max-age=3600")?;
     Ok(Response::ok(svg)?.with_headers(headers))

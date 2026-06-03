@@ -1,15 +1,14 @@
 name = "streakforge"
 main = "build/worker/shim.mjs"
 compatibility_date = "2026-06-01"
-compatibility_flags = ["nodejs_compat"]
 
 [build]
-command = "cargo install -q worker-build && worker-build --release"
+command = "worker-build --release"
 
 [[d1_databases]]
 binding = "DB"
 database_name = "streakforge"
-database_id = "YOUR_D1_DATABASE_ID"
+database_id = "f6bc3672-ccc6-462a-9361-a131fdb41cbb"
 
 [vars]
 CACHE_TTL_SECONDS = "3600"

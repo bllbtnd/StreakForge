@@ -31,7 +31,7 @@ pub async fn fetch_contributions(
         "variables": { "username": username }
     });
 
-    let mut headers = Headers::new();
+    let headers = Headers::new();
     headers.set("Authorization", &format!("Bearer {}", token)).map_err(|e| e.to_string())?;
     headers.set("Content-Type", "application/json").map_err(|e| e.to_string())?;
     headers.set("User-Agent", "StreakForge/1.0").map_err(|e| e.to_string())?;
@@ -44,8 +44,9 @@ pub async fn fetch_contributions(
     let request = Request::new_with_init(GITHUB_API_URL, &init).map_err(|e| e.to_string())?;
     let mut response = Fetch::Request(request).send().await.map_err(|e| e.to_string())?;
 
-    if !response.status_code().is_success() {
-        return Err(format!("GitHub API returned {}", response.status_code()));
+    let status = response.status_code();
+    if !(200..300).contains(&status) {
+        return Err(format!("GitHub API returned {}", status));
     }
 
     let parsed: GitHubResponse = response.json().await.map_err(|e| e.to_string())?;

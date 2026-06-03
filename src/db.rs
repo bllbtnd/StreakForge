@@ -22,8 +22,8 @@ pub async fn upsert_user(db: &D1Database, record: &UserRecord) -> Result<(), Str
     )
     .bind(&[
         record.username.as_str().into(),
-        record.streak.into(),
-        record.longest_streak.into(),
+        (record.streak as f64).into(),
+        (record.longest_streak as f64).into(),
         record.last_loaded.as_str().into(),
     ])
     .map_err(|e| e.to_string())?
@@ -48,7 +48,7 @@ pub async fn delete_user(db: &D1Database, username: &str) -> Result<(), String> 
 pub async fn get_rank(db: &D1Database, streak: i64) -> Result<i64, String> {
     let stmt = db
         .prepare("SELECT COUNT(*) as cnt FROM users WHERE streak > ?1")
-        .bind(&[streak.into()])
+        .bind(&[(streak as f64).into()])
         .map_err(|e| e.to_string())?;
 
     #[derive(serde::Deserialize)]
