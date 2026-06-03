@@ -1,27 +1,34 @@
-// fire-symbol paths (original viewBox 0 0 32 32):
-// translate(26.9,13.4) scale(4.57) maps them to x:40-160, y:18-155 in our 200x200 card
-const FIRE_PATHS: &str = "M16 1c-3.282 15.79-13.125 17.366 0 28.418 13.126-11.053 3.282-12.628 0-28.418z\
-M7.797 10.463c-1.641 4.736-4.922 7.919-4.922 12.656s6.562 7.881 11.485 7.881c-9.844-7.896-6.563-12.643-6.563-20.537z\
-M24.203 10.463c0 7.895 3.282 12.642-6.562 20.537 4.922 0 11.485-3.144 11.485-7.881s-3.282-7.92-4.922-12.656z";
-
-// center tongue only, scaled slightly smaller for the hot-core highlight
-const CORE_PATH: &str = "M16 1c-3.282 15.79-13.125 17.366 0 28.418 13.126-11.053 3.282-12.628 0-28.418z";
+// fire-1-svgrepo paths, original viewBox 0 0 24 24
+// fill-rule="evenodd" carves the inner detail windows out of the fill
+// transform: translate(-5,-19) scale(8.75) → maps to x:47-152, y:15-155 in our 200×200 card
+const FIRE: &str = "M14.4527 8.48679L12.1842 3.93896L11.4471 4.74309\
+C7.30945 9.25693 6 11.9609 6 14.2499C6 17.422 8.73452 19.909 12 19.909\
+C15.2655 19.909 18 17.422 18 14.2499C18 13.3179 17.6746 12.3124 17.2381 11.3658\
+C16.796 10.4069 16.2091 9.44335 15.62 8.57788L15.1065 7.82342L14.4527 8.48679Z\
+M14.0473 11.0348L14.8818 10.1883C15.256 10.7846 15.6008 11.397 15.876 11.9938\
+C16.2765 12.8625 16.5 13.6357 16.5 14.2499C16.5 15.0941 16.2233 15.8901 15.7438 16.5554\
+C15.7479 16.4935 15.75 16.4309 15.75 16.3675C15.75 15.8056 15.5231 15.2413 15.2632 14.7624\
+C14.9946 14.2679 14.6434 13.7798 14.2995 13.3507L13.8135 12.7443L13.4772 13.034\
+L12.1744 10.8159L11.4903 11.4497C9.13721 13.6298 8.25 15.0508 8.25 16.3675\
+C8.25 16.4309 8.25209 16.4935 8.25622 16.5554C7.77669 15.8901 7.5 15.0941 7.5 14.2499\
+C7.5 12.6786 8.327 10.5308 11.8206 6.5705L14.0473 11.0348Z\
+M13.0943 15.344L13.5948 14.9127C13.7259 15.1036 13.8447 15.2936 13.9449 15.4781\
+C14.1632 15.8802 14.25 16.1791 14.25 16.3675C14.25 17.1171 13.4131 17.9999 12 17.9999\
+C10.5869 17.9999 9.75 17.1171 9.75 16.3675C9.75 15.8235 10.0697 14.9464 11.8334 13.1972\
+L13.0943 15.344Z";
 
 pub fn render_card(username: &str, streak: i64, longest_streak: i64, rank: i64) -> String {
-    let (outer_color, inner_color) = shades(streak);
+    let color = flame_color(streak);
     let num_color = if streak == 0 { "#484f58" } else { "#ffffff" };
     let anim = anim_css(streak);
 
     let flame = if streak > 0 {
         format!(
             r##"<g class="flame">
-    <path transform="translate(26.9,13.4) scale(4.57)" d="{fire}" fill="{oc}"/>
-    <path transform="translate(36,26) scale(4.0)" d="{core}" fill="{ic}"/>
+    <path transform="translate(-5,-19) scale(8.75)" fill-rule="evenodd" d="{fire}" fill="{color}"/>
   </g>"##,
-            fire = FIRE_PATHS,
-            core = CORE_PATH,
-            oc = outer_color,
-            ic = inner_color,
+            fire = FIRE,
+            color = color,
         )
     } else {
         String::new()
@@ -60,17 +67,17 @@ pub fn render_error_card(message: &str) -> String {
     )
 }
 
-fn shades(streak: i64) -> (&'static str, &'static str) {
+fn flame_color(streak: i64) -> &'static str {
     match streak {
-        1..=6     => ("#e6a800", "#ffd700"),
-        7..=13    => ("#e67300", "#ffaa00"),
-        14..=29   => ("#cc4400", "#ff6600"),
-        30..=59   => ("#cc1a00", "#ff3300"),
-        60..=99   => ("#aa0000", "#ee1111"),
-        100..=149 => ("#880044", "#cc0066"),
-        150..=199 => ("#660088", "#9900cc"),
-        200..=364 => ("#3300aa", "#5500ff"),
-        _         => ("#0033bb", "#0055ff"),
+        1..=6     => "#ffd700",
+        7..=13    => "#ffaa00",
+        14..=29   => "#ff6600",
+        30..=59   => "#ff3300",
+        60..=99   => "#ee1111",
+        100..=149 => "#cc0066",
+        150..=199 => "#9900cc",
+        200..=364 => "#5500ff",
+        _         => "#0055ff",
     }
 }
 
