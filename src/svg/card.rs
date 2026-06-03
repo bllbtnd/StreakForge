@@ -25,7 +25,7 @@ pub fn render_card(username: &str, streak: i64, longest_streak: i64, rank: i64) 
     let flame = if streak > 0 {
         format!(
             r##"<g class="flame">
-    <path transform="translate(-5,-19) scale(8.75)" fill-rule="evenodd" d="{fire}" fill="{color}"/>
+    <path transform="translate(-5,-19) scale(8.75)" d="{fire}" fill="{color}"/>
   </g>"##,
             fire = FIRE,
             color = color,
