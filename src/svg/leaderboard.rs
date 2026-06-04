@@ -1,55 +1,71 @@
 use crate::types::LeaderboardEntry;
 
-pub fn render_leaderboard(entries: &[LeaderboardEntry]) -> String {
-    let rows = entries.iter().map(render_row).collect::<Vec<_>>().join("\n");
-    let height = 420usize;
+pub fn render_leaderboard_html(entries: &[LeaderboardEntry]) -> String {
+    let rows = entries.iter().map(html_row).collect::<Vec<_>>().join("\n");
+
+    let empty = if entries.is_empty() {
+        r#"<div class="empty">No streaks recorded yet. Visit /card/:username to get started.</div>"#
+    } else {
+        ""
+    };
 
     format!(
-        r##"<svg xmlns="http://www.w3.org/2000/svg" width="400" height="{height}" viewBox="0 0 400 {height}">
-  <defs>
-    <style>
-      .title {{ font: 14px system-ui, monospace; fill: #8b949e; }}
-      .rank {{ font: bold 13px system-ui, monospace; }}
-      .uname {{ font: 13px system-ui, monospace; fill: #c9d1d9; }}
-      .streak {{ font: bold 13px system-ui, monospace; fill: #c9d1d9; }}
-      @keyframes shimmer {{ 0%,100%{{opacity:1}} 50%{{opacity:.6}} }}
-      .shimmer {{ animation: shimmer 2s ease-in-out infinite; }}
-    </style>
-  </defs>
-  <rect width="400" height="{height}" rx="12" fill="#0d1117" stroke="#30363d" stroke-width="1"/>
-  <text x="200" y="30" text-anchor="middle" class="title">StreakForge Leaderboard</text>
-  <line x1="16" y1="42" x2="384" y2="42" stroke="#30363d" stroke-width="1"/>
-{rows}
-</svg>"##,
-        height = height,
+        r##"<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width,initial-scale=1"/>
+  <title>StreakForge Leaderboard</title>
+  <style>
+    *{{margin:0;padding:0;box-sizing:border-box}}
+    body{{background:#0d1117;color:#c9d1d9;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',system-ui,sans-serif;min-height:100vh;display:flex;flex-direction:column;align-items:center;padding:52px 16px}}
+    header{{text-align:center;margin-bottom:32px}}
+    h1{{font-size:22px;font-weight:700;color:#e6edf3;letter-spacing:.04em}}
+    .sub{{font-size:13px;color:#484f58;margin-top:6px}}
+    .board{{width:100%;max-width:460px;border:1px solid #30363d;border-radius:10px;overflow:hidden}}
+    .row{{display:flex;align-items:center;padding:14px 20px;border-bottom:1px solid #21262d;gap:14px}}
+    .row:last-child{{border-bottom:none}}
+    .row:hover{{background:#161b22}}
+    .rank{{font-size:13px;font-weight:700;width:30px;text-align:right;flex-shrink:0}}
+    .name{{flex:1;font-size:14px;color:#c9d1d9}}
+    .score{{display:flex;align-items:center;gap:7px;font-size:15px;font-weight:700}}
+    .dot{{width:8px;height:8px;border-radius:50%;flex-shrink:0}}
+    .empty{{color:#484f58;font-size:14px;padding:32px;text-align:center}}
+  </style>
+</head>
+<body>
+  <header>
+    <h1>StreakForge</h1>
+    <p class="sub">Top contribution streaks</p>
+  </header>
+  <div class="board">
+{rows}{empty}
+  </div>
+</body>
+</html>"##,
         rows = rows,
+        empty = empty,
     )
 }
 
-fn render_row(entry: &LeaderboardEntry) -> String {
-    let y_base = 42 + (entry.rank - 1) * 36;
-    let text_y = y_base + 23;
+fn html_row(entry: &LeaderboardEntry) -> String {
     let rank_color = rank_color(entry.rank);
-    let shimmer = if entry.rank == 1 { r#" class="shimmer""# } else { "" };
-    let flame = small_flame(entry.streak);
-    let flame_y = y_base + 10;
+    let streak_color = streak_color(entry.streak);
+    let name = escape_html(&entry.username);
 
     format!(
-        r##"  <g{shimmer}>
-    <text x="24" y="{text_y}" class="rank" fill="{rank_color}">#{rank}</text>
-    <text x="60" y="{text_y}" class="uname">{username}</text>
-    <g transform="translate(348,{flame_y})">
-      {flame}
-    </g>
-    <text x="372" y="{text_y}" text-anchor="end" class="streak">{streak}</text>
-  </g>"##,
-        shimmer = shimmer,
-        text_y = text_y,
+        r##"    <div class="row">
+      <span class="rank" style="color:{rank_color}">#{rank}</span>
+      <span class="name">{name}</span>
+      <span class="score">
+        <span class="dot" style="background:{streak_color}"></span>
+        <span style="color:{streak_color}">{streak}</span>
+      </span>
+    </div>"##,
         rank_color = rank_color,
         rank = entry.rank,
-        username = escape_xml(&entry.username),
-        flame_y = flame_y,
-        flame = flame,
+        name = name,
+        streak_color = streak_color,
         streak = entry.streak,
     )
 }
@@ -59,20 +75,25 @@ fn rank_color(rank: usize) -> &'static str {
         1 => "#ffd700",
         2 => "#c0c0c0",
         3 => "#cd7f32",
-        _ => "#8b949e",
+        _ => "#484f58",
     }
 }
 
-fn small_flame(streak: i64) -> &'static str {
+fn streak_color(streak: i64) -> &'static str {
     match streak {
-        0..=6 => r##"<path d="M4 12C4 12 1 9 2 6C2.5 4 3.5 4 4 6C4.5 4 5.5 4 6 6C7 9 4 12 4 12Z" fill="#e3b341"/>"##,
-        7..=29 => r##"<path d="M4 12C4 12 1 9 2 6C2.5 4 3.5 4 4 6C4.5 4 5.5 4 6 6C7 9 4 12 4 12Z" fill="#f0883e"/>"##,
-        30..=99 => r##"<path d="M4 12C4 12 1 9 2 6C2.5 4 3.5 4 4 6C4.5 4 5.5 4 6 6C7 9 4 12 4 12Z" fill="#ff6b35"/>"##,
-        _ => r##"<path d="M4 12C4 12 1 9 2 6C2.5 4 3.5 4 4 6C4.5 4 5.5 4 6 6C7 9 4 12 4 12Z" fill="#ff4444"/>"##,
+        1..=6     => "#ffd700",
+        7..=13    => "#ffaa00",
+        14..=29   => "#ff6600",
+        30..=59   => "#ff3300",
+        60..=99   => "#ee1111",
+        100..=149 => "#cc0066",
+        150..=199 => "#9900cc",
+        200..=364 => "#5500ff",
+        _         => "#0055ff",
     }
 }
 
-fn escape_xml(s: &str) -> String {
+fn escape_html(s: &str) -> String {
     s.replace('&', "&amp;")
         .replace('<', "&lt;")
         .replace('>', "&gt;")

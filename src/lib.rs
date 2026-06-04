@@ -8,7 +8,7 @@ mod svg;
 mod types;
 
 use svg::card::{render_card, render_error_card};
-use svg::leaderboard::render_leaderboard;
+use svg::leaderboard::render_leaderboard_html;
 use types::UserRecord;
 
 #[event(fetch)]
@@ -89,9 +89,16 @@ async fn handle_leaderboard(_req: Request, ctx: RouteContext<()>) -> Result<Resp
     };
 
     match db::get_leaderboard(&db).await {
-        Ok(entries) => svg_response(render_leaderboard(&entries)),
+        Ok(entries) => html_response(render_leaderboard_html(&entries)),
         Err(_) => svg_response(render_error_card("GitHub unavailable, try again")),
     }
+}
+
+fn html_response(html: String) -> Result<Response> {
+    let headers = Headers::new();
+    headers.set("Content-Type", "text/html; charset=utf-8")?;
+    headers.set("Cache-Control", "public, max-age=60")?;
+    Ok(Response::ok(html)?.with_headers(headers))
 }
 
 async fn fetch_and_store(
